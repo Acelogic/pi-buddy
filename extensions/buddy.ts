@@ -637,12 +637,35 @@ export default function buddyExtension(pi: ExtensionAPI) {
 	pi.on("message_end", async (_event, ctx) => render(ctx));
 
 	pi.registerCommand("buddy", {
-		description: "Show your pi-buddy. Subcommands: mute, unmute, rename <name>, adopt",
+		description: "Show your pi-buddy. Subcommands: help, mute, unmute, rename <name>, adopt",
 		handler: async (args, ctx: ExtensionCommandContext) => {
 			const parts = args.trim().split(/\s+/).filter(Boolean);
 			const sub = (parts[0] ?? "").toLowerCase();
 			const rest = parts.slice(1).join(" ").trim();
 
+			if (sub === "help" || sub === "?") {
+				const help = [
+					`pi-buddy — ${nameOf(state)} the ${speciesOf(state).name}`,
+					"",
+					"Commands:",
+					"  /buddy              show your buddy",
+					"  /buddy help         this message",
+					"  /buddy mute         silence speech bubbles",
+					"  /buddy unmute       let your buddy talk again",
+					"  /buddy rename <n>   give your buddy a custom name",
+					"  /buddy adopt        re-roll species (asks first)",
+					"",
+					"Env vars:",
+					"  PI_BUDDY_ALIGN      right (default) | left",
+					"  PI_BUDDY_PLACEMENT  belowEditor (default) | aboveEditor",
+					"  PI_BUDDY_ANIMATE    off to freeze frame 0",
+					"  PI_BUDDY_BLINK      off to disable idle blink",
+					"  PI_BUDDY_BUBBLE_MS  speech bubble duration in ms (default 6000)",
+					"  PI_BUDDY_SEED       override species hash seed",
+				].join("\n");
+				ctx.ui.notify(help, "info");
+				return;
+			}
 			if (!sub || sub === "show") {
 				ctx.ui.notify(`${nameOf(state)} the ${speciesOf(state).name} is here.`, "info");
 				render(ctx);
@@ -691,7 +714,7 @@ export default function buddyExtension(pi: ExtensionAPI) {
 				render(ctx);
 				return;
 			}
-			ctx.ui.notify(`Unknown subcommand: ${sub}. Try: mute | unmute | rename | adopt`, "warning");
+			ctx.ui.notify(`Unknown subcommand: ${sub}. Try /buddy help.`, "warning");
 		},
 	});
 }
