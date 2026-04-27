@@ -520,7 +520,10 @@ export default function buddyExtension(pi: ExtensionAPI) {
 		const bubble = showSpeech ? buildBubble(showSpeech) : null;
 		const composed = compose(creature, ACCENTS[mood], bubble);
 		const cols = Math.max(40, process.stdout.columns || 120);
-		const aligned = align === "right" ? rightAlign(composed, cols - 1) : composed;
+		// pi's Text component reserves paddingX*2=2 cols, and we want some breathing room
+		// from the edge. Stay well inside the widget content width to avoid line wrapping,
+		// which would insert a blank row between every creature row.
+		const aligned = align === "right" ? rightAlign(composed, cols - 6) : composed;
 		ctx.ui.setWidget(STATUS_ID, aligned, { placement: getPlacement() });
 	};
 
