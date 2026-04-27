@@ -11,23 +11,21 @@ import type {
 const STATUS_ID = "pi-buddy";
 
 const RESET = "\x1b[0m";
-const GRAY = "\x1b[38;5;245m";
-const DIM = "\x1b[38;5;239m";
 const BUBBLE_BORDER = "\x1b[38;5;250m";
 const BUBBLE_TEXT = "\x1b[38;5;253m";
 const ACCENTS: Record<Mood, string> = {
-	default: "\x1b[38;5;139m", // lavender
-	happy: "\x1b[38;5;71m", // green
-	curious: "\x1b[38;5;74m", // blue
-	worried: "\x1b[38;5;208m", // orange
-	grumpy: "\x1b[38;5;196m", // red
+	default: "\x1b[38;5;139m",
+	happy: "\x1b[38;5;71m",
+	curious: "\x1b[38;5;74m",
+	worried: "\x1b[38;5;208m",
+	grumpy: "\x1b[38;5;196m",
 };
 
 type Mood = "default" | "happy" | "curious" | "worried" | "grumpy";
 
 interface MoodFace {
-	e: string; // 3-char eye row, e.g. "o o"
-	m: string; // 1-char mouth, e.g. "—"
+	e: string;
+	m: string;
 }
 
 const FACES: Record<Mood, MoodFace> = {
@@ -43,206 +41,170 @@ const BLINK_FACE: MoodFace = { e: "- -", m: "—" };
 interface Species {
 	name: string;
 	bias: Partial<Stats>;
-	frame: readonly string[]; // multi-line, contains {E} and {M} placeholders
+	frames: readonly (readonly string[])[];
 }
 
 const SPECIES: Species[] = [
 	{
 		name: "duck",
 		bias: { snark: 6 },
-		frame: [
-			"    _,_",
-			"  (>{E}<)",
-			"   ({M})",
-			"   /==\\",
-			"   ¯¯¯¯",
+		frames: [
+			["    _,_   ", "  (>{E}<)  ", "   ({M})   ", "   /==\\   ", "   ¯¯¯¯   "],
+			["    _,_   ", "  (>{E}<)  ", "   ({M})   ", "   /==\\~  ", "   ¯¯¯¯   "],
+			["    _,_~  ", "  (>{E}<)  ", "   ({M})   ", "   /=~=\\  ", "   ¯¯¯¯   "],
 		],
 	},
 	{
 		name: "penguin",
 		bias: { patience: 8 },
-		frame: [
-			"   .-\"-.",
-			"  ( {E} )",
-			"  | {M} |",
-			"   \\   /",
-			"   _\\^/_",
+		frames: [
+			["   .-\"-.   ", "  ( {E} )  ", "  | {M} |  ", "   \\   /   ", "   _\\^/_   "],
+			["   .-\"-.   ", "  ( {E} )  ", "  | {M} |  ", "   \\   /   ", "   _/^\\_   "],
+			["  ~.-\"-.   ", "  ( {E} )  ", "  | {M} |  ", "   \\   /   ", "   _\\^/_   "],
 		],
 	},
 	{
 		name: "dragon",
 		bias: { chaos: 9, snark: 4 },
-		frame: [
-			"   /\\___/\\",
-			"  ( {E} )=≡≡⌇",
-			"   /v{M}v\\",
-			"  /(  |  )\\",
-			"     ¯  ¯",
+		frames: [
+			["   /\\___/\\    ", "  ( {E} )=≡≡⌇ ", "   /v{M}v\\    ", "  /(  |  )\\   ", "     ¯  ¯     "],
+			["   /\\___/\\    ", "  ( {E} )=≡⌇⌇ ", "   /v{M}v\\    ", "  /(  |  )\\   ", "     ¯  ¯     "],
+			[" ~ /\\___/\\    ", "  ( {E} )=≡≡⌇ ", "   /v{M}v\\    ", "  /(  |  )\\   ", "     ¯  ¯     "],
 		],
 	},
 	{
 		name: "octopus",
 		bias: { debugging: 12 },
-		frame: [
-			"     ___",
-			"   ( {E} )",
-			"   ( {M} )",
-			"   /|||||\\",
-			"    ' ' '",
+		frames: [
+			["    ___    ", "  ( {E} )  ", "  ( {M} )  ", "  /|||||\\  ", "   ' ' '   "],
+			["    ___    ", "  ( {E} )  ", "  ( {M} )  ", "  \\|||||/  ", "   ' ' '   "],
+			[" o  ___    ", "  ( {E} )  ", "  ( {M} )  ", "  /|\\|/|\\  ", "   ' ' '   "],
 		],
 	},
 	{
 		name: "capybara",
 		bias: { patience: 12 },
-		frame: [
-			"   ,_____,",
-			"  ( {E}   )",
-			"  (   {M}   )",
-			"   m     m",
-			"   ¯     ¯",
+		frames: [
+			["  ,_____,    ", " ( {E}    )  ", " (   {M}   ) ", "  m     m    ", "  ¯     ¯    "],
+			["  ,_____,    ", " ( {E}    )  ", " (   {M}   ) ", "  u     u    ", "  ¯     ¯    "],
+			["  ~  ~       ", "  ,_____,    ", " ( {E}    )  ", " (   {M}   ) ", "  m     m    "],
 		],
 	},
 	{
 		name: "axolotl",
 		bias: { chaos: 4, wisdom: 4 },
-		frame: [
-			"   ψ___ψ",
-			"  ( {E} )",
-			"  ~ {M} ~",
-			"  (  |  )",
-			"    ¯¯¯",
+		frames: [
+			["  ψ___ψ    ", " ( {E}  )  ", " ~ {M}  ~  ", " (  |  )   ", "   ¯¯¯     "],
+			["  φ___φ    ", " ( {E}  )  ", " ≈ {M}  ≈  ", " (  |  )   ", "   ¯¯¯     "],
+			["  ψ___ψ    ", " ( {E}  )  ", " ~ {M}  ~  ", " (  ~  )   ", "   ¯¯¯     "],
 		],
 	},
 	{
 		name: "cat",
 		bias: { snark: 10 },
-		frame: [
-			"   /\\___/\\",
-			"  ( {E} )",
-			"   > {M} <",
-			"  /(  |  )\\",
-			"     ¯  ¯",
+		frames: [
+			["   /\\___/\\    ", "  ( {E}  )    ", "   > {M} <    ", "  /(  |  )\\   ", "     ¯  ¯     "],
+			["   /\\-_-/\\    ", "  ( {E}  )    ", "   > {M} <    ", "  /(  |  )\\   ", "     ¯  ¯     "],
+			["   /\\___/\\    ", "  ( {E}  )    ", "   > {M} <    ", "  /(  |  )\\~  ", "     ¯  ¯     "],
 		],
 	},
 	{
 		name: "fox",
 		bias: { wisdom: 6, snark: 3 },
-		frame: [
-			"   /\\_/\\",
-			"  / {E} \\",
-			"   > {M} <",
-			"   |≡≡≡|",
-			"   '   '",
+		frames: [
+			["   /\\_/\\   ", "  / {E} \\  ", "   > {M} < ", "   |≡≡≡|   ", "   '   '   "],
+			["   /\\_/\\   ", "  / {E} \\  ", "   > {M} < ", "   |≡=≡|   ", "   '   '   "],
+			["   /\\_/\\~  ", "  / {E} \\  ", "   > {M} < ", "   |≡≡≡|   ", "   '   '   "],
 		],
 	},
 	{
 		name: "owl",
 		bias: { wisdom: 12 },
-		frame: [
-			"   ,___,",
-			"  ( {E} )",
-			"   ({M}{M})",
-			"  )=|=(",
-			"    ¯",
+		frames: [
+			["  ,___,    ", " ( {E} )   ", "  ({M}{M})    ", " )=|=(     ", "    ¯      "],
+			["  ,___,    ", " ( {E} )   ", "  ({M}{M})    ", " )_|_(     ", "    ¯      "],
+			["  ,___,    ", " ( {E} )   ", "  ({M}{M})    ", " )=|=(     ", "   ' '     "],
 		],
 	},
 	{
 		name: "panda",
 		bias: { patience: 6 },
-		frame: [
-			"   ◖___◗",
-			"  ( {E} )",
-			"  ( {M} )",
-			"   '   '",
-			"   ¯   ¯",
+		frames: [
+			["  ◖___◗    ", " ( {E} )   ", " ( {M} )   ", "  '   '    ", "  ¯   ¯    "],
+			["  ◖_·_◗    ", " ( {E} )   ", " ( {M} )   ", "  '   '    ", "  ¯   ¯    "],
+			["  ◖___◗    ", " ( {E} )   ", " ( {M} )   ", "  '~  '    ", "  ¯   ¯    "],
 		],
 	},
 	{
 		name: "raccoon",
 		bias: { chaos: 7, debugging: 3 },
-		frame: [
-			"   /\\_/\\",
-			"  /={E}=\\",
-			"   ' {M} '",
-			"  /|≡≡|\\",
-			"    ¯  ¯",
+		frames: [
+			["   /\\_/\\    ", "  /={E}=\\   ", "   ' {M} '  ", "  /|≡≡|\\    ", "    ¯  ¯    "],
+			["   /\\_/\\    ", "  /-{E}-\\   ", "   ' {M} '  ", "  /|≡≡|\\    ", "    ¯  ¯    "],
+			["   /\\_/\\~   ", "  /={E}=\\   ", "   ' {M} '  ", "  /|≡≡|\\    ", "    ¯  ¯    "],
 		],
 	},
 	{
 		name: "hedgehog",
 		bias: { snark: 4, patience: 4 },
-		frame: [
-			"  /\\/\\/\\/\\",
-			" ( {E}    )",
-			"    {M}  ~",
-			"  '~~~~~'",
-			"    ¯¯¯",
+		frames: [
+			[" /\\/\\/\\/\\    ", "( {E}    )    ", "   {M}  ~     ", " '~~~~~'      ", "   ¯¯¯        "],
+			[" /\\^/\\/\\     ", "( {E}    )    ", "   {M}  ~     ", " '~~~~~'      ", "   ¯¯¯        "],
+			[" /\\/\\/^\\/    ", "( {E}    )    ", "   {M}  ~     ", " '~~~~~'      ", "   ¯¯¯        "],
 		],
 	},
 	{
 		name: "frog",
 		bias: { chaos: 3, wisdom: 4 },
-		frame: [
-			"   ◖{E}◗",
-			"  ( {M} )",
-			"   /===\\",
-			"  ('   ')",
-			"    ¯¯¯",
+		frames: [
+			["  ◖{E}◗    ", " ( {M} )   ", "  /===\\    ", " ('   ')   ", "   ¯¯¯     "],
+			["  ◖{E}◗    ", " ( {M} )   ", "  /=·=\\    ", " ('   ')   ", "   ¯¯¯     "],
+			["  ◖{E}◗ ~  ", " ( {M} )   ", "  /===\\    ", " ('   ')   ", "   ¯¯¯     "],
 		],
 	},
 	{
 		name: "hamster",
 		bias: { chaos: 6 },
-		frame: [
-			"   ______",
-			"  ( {E}   )",
-			"  ( {M}   )",
-			"   '||||'",
-			"    ¯¯¯¯",
+		frames: [
+			["  ______    ", " ( {E}    ) ", " ( {M}    ) ", "  '||||'    ", "   ¯¯¯¯     "],
+			["  ______    ", " ( {E}    ) ", " ( {M}    ) ", "  '|||||'   ", "   ¯¯¯¯     "],
+			["  ______    ", " ( {E}    ) ", " ( {M}    ) ", "  '|| ||'   ", "   ¯¯¯¯     "],
 		],
 	},
 	{
 		name: "narwhal",
 		bias: { wisdom: 6, snark: 2 },
-		frame: [
-			"     ____>",
-			"  ( {E}   )>══",
-			"   ( {M} )",
-			"  ~/====\\~",
-			"     ¯¯",
+		frames: [
+			["    ____>      ", " ( {E}    )>══ ", "  ( {M} )      ", " ~/====\\~     ", "    ¯¯         "],
+			["    ____>      ", " ( {E}    )>══~", "  ( {M} )      ", " ~/====\\~     ", "    ¯¯         "],
+			["~   ____>      ", " ( {E}    )>══ ", "  ( {M} )      ", " ~/====\\~     ", "    ¯¯         "],
 		],
 	},
 	{
 		name: "sloth",
 		bias: { patience: 14 },
-		frame: [
-			"   ,-----,",
-			"  ( {E}   )",
-			"   | {M} |",
-			"  /=======\\",
-			"   ¯¯¯¯¯¯¯",
+		frames: [
+			["  ,-----,    ", " ( {E}    )  ", "  | {M} |    ", " /=======\\   ", "  ¯¯¯¯¯¯¯    "],
+			["z ,-----,    ", " ( {E}    )  ", "  | {M} |    ", " /=======\\   ", "  ¯¯¯¯¯¯¯    "],
+			["  ,-----,  z ", " ( {E}    )  ", "  | {M} |    ", " /=======\\   ", "  ¯¯¯¯¯¯¯    "],
 		],
 	},
 	{
 		name: "turtle",
 		bias: { wisdom: 8, patience: 5 },
-		frame: [
-			"        ___",
-			"   ___( {E} )",
-			"  /({M})/\\___>",
-			"   |     |",
-			"   ¯     ¯",
+		frames: [
+			["       ___      ", "  ___( {E}  )   ", " /({M})/\\____>  ", "  |      |      ", "  ¯      ¯      "],
+			["       ___      ", "  ___( {E}  )~  ", " /({M})/\\____>  ", "  |      |      ", "  ¯      ¯      "],
+			["       ___      ", "  ___( {E}  )   ", " /({M})/\\====>  ", "  |      |      ", "  ¯      ¯      "],
 		],
 	},
 	{
 		name: "unicorn",
 		bias: { wisdom: 4, snark: 5, chaos: 3 },
-		frame: [
-			"     /\\",
-			"    /==\\",
-			"   ( {E} )",
-			"    > {M} <",
-			"   /|||||\\",
+		frames: [
+			["    /\\        ", "   /==\\       ", "  ( {E} )     ", "   > {M} <    ", "  /|||||\\     "],
+			["    /\\  *     ", "   /==\\       ", "  ( {E} )     ", "   > {M} <    ", "  /|||||\\     "],
+			["  * /\\        ", "   /==\\       ", "  ( {E} )     ", "   > {M} <    ", "  /|||||\\     "],
 		],
 	},
 ];
@@ -419,8 +381,18 @@ function getPlacement(): Placement {
 	return raw === "above" || raw === "aboveeditor" ? "aboveEditor" : "belowEditor";
 }
 
+const ANSI_RE = /\x1b\[[0-9;]*m/g;
+
+function stripAnsi(s: string): string {
+	return s.replace(ANSI_RE, "");
+}
+
 function visibleWidth(s: string): number {
 	return [...s].length;
+}
+
+function visibleLen(s: string): number {
+	return [...stripAnsi(s)].length;
 }
 
 function padRight(s: string, w: number): string {
@@ -428,9 +400,20 @@ function padRight(s: string, w: number): string {
 	return pad > 0 ? s + " ".repeat(pad) : s;
 }
 
-function renderCreature(species: Species, mood: Mood, blinking: boolean): string[] {
+function padLeft(s: string, w: number): string {
+	const pad = w - visibleLen(s);
+	return pad > 0 ? " ".repeat(pad) + s : s;
+}
+
+function renderCreature(species: Species, mood: Mood, blinking: boolean, frameIdx: number): string[] {
 	const face = blinking ? BLINK_FACE : FACES[mood];
-	return species.frame.map((line) => line.replaceAll("{E}", face.e).replaceAll("{M}", face.m));
+	const frame = species.frames[frameIdx % species.frames.length] ?? species.frames[0]!;
+	const fill = (l: string) => l.replaceAll("{E}", face.e).replaceAll("{M}", face.m);
+	let maxW = 0;
+	for (const f of species.frames) {
+		for (const l of f) maxW = Math.max(maxW, visibleWidth(fill(l)));
+	}
+	return frame.map((line) => padRight(fill(line), maxW));
 }
 
 function wrapText(text: string, maxWidth: number): string[] {
@@ -439,11 +422,9 @@ function wrapText(text: string, maxWidth: number): string[] {
 	const out: string[] = [];
 	let cur = "";
 	for (const w of words) {
-		if (!cur) {
-			cur = w;
-		} else if (cur.length + 1 + w.length <= maxWidth) {
-			cur = `${cur} ${w}`;
-		} else {
+		if (!cur) cur = w;
+		else if (cur.length + 1 + w.length <= maxWidth) cur = `${cur} ${w}`;
+		else {
 			out.push(cur);
 			cur = w;
 		}
@@ -467,51 +448,25 @@ function compose(creature: string[], accent: string, bubble: string[] | null): s
 	const cw = creature.reduce((m, l) => Math.max(m, visibleWidth(l)), 0);
 	const colored = creature.map((l) => `${accent}${padRight(l, cw)}${RESET}`);
 	if (!bubble) return colored;
+	const bw = bubble.reduce((m, l) => Math.max(m, visibleLen(l)), 0);
 	const totalH = Math.max(creature.length, bubble.length);
 	const offset = Math.max(0, Math.floor((creature.length - bubble.length) / 2));
+	const blank = " ".repeat(bw);
 	const out: string[] = [];
 	for (let i = 0; i < totalH; i++) {
-		const left = i < creature.length ? colored[i]! : `${accent}${" ".repeat(cw)}${RESET}`;
 		const bIdx = i - offset;
-		const right = bIdx >= 0 && bIdx < bubble.length ? bubble[bIdx]! : "";
-		out.push(`${left}   ${right}`);
+		const left = bIdx >= 0 && bIdx < bubble.length ? padLeft(bubble[bIdx]!, bw) : blank;
+		const right = i < creature.length ? colored[i]! : `${" ".repeat(cw)}`;
+		out.push(`${left}  ${right}`);
 	}
 	return out;
 }
 
-function buildHeader(state: BuddyState, mood: Mood): string {
-	const sp = speciesOf(state);
-	const accent = ACCENTS[mood];
-	const moodTag = mood === "default" ? "" : ` ${GRAY}(${mood})${RESET}`;
-	const muted = state.muted ? ` ${DIM}[muted]${RESET}` : "";
-	return `${accent}${sp.name === nameOf(state) ? sp.name : `${nameOf(state)} the ${sp.name}`}${RESET}${moodTag}${muted}`;
-}
-
-function statBar(label: string, val: number): string {
-	const width = 14;
-	const filled = Math.max(0, Math.min(width, Math.round((val / 100) * width)));
-	const bar = `${"█".repeat(filled)}${DIM}${"░".repeat(width - filled)}${RESET}`;
-	return `${GRAY}${label.padEnd(10)}${RESET} ${bar} ${val}`;
-}
-
-function panel(state: BuddyState, blinking: boolean): string[] {
-	const mood = moodFor(state.stats);
-	const sp = speciesOf(state);
-	const ageDays = Math.max(1, Math.round((Date.now() - state.birthAt) / 86_400_000));
-	const creature = renderCreature(sp, mood, blinking);
-	const stats = [
-		statBar("Debugging", state.stats.debugging),
-		statBar("Patience", state.stats.patience),
-		statBar("Chaos", state.stats.chaos),
-		statBar("Wisdom", state.stats.wisdom),
-		statBar("Snark", state.stats.snark),
-	];
-	const composed = compose(creature, ACCENTS[mood], stats);
-	return [
-		buildHeader(state, mood),
-		`${GRAY}${ageDays}d old · sessions ${state.totalSessions} · turns ${state.totalTurns} · tools ${state.totalTools}${RESET}`,
-		...composed,
-	];
+function rightAlign(lines: string[], cols: number): string[] {
+	return lines.map((l) => {
+		const pad = Math.max(0, cols - visibleLen(l));
+		return pad > 0 ? " ".repeat(pad) + l : l;
+	});
 }
 
 function nudge(stats: Stats, deltas: Partial<Stats>): Stats {
@@ -540,11 +495,16 @@ export default function buddyExtension(pi: ExtensionAPI) {
 	let lastCtx: ExtensionContext | null = null;
 	let blinking = false;
 	let blinkInterval: ReturnType<typeof setInterval> | null = null;
+	let frameIdx = 0;
+	let frameTimer: ReturnType<typeof setTimeout> | null = null;
 	const bubbleMs = (() => {
 		const raw = Number.parseInt(process.env.PI_BUDDY_BUBBLE_MS ?? "", 10);
 		return Number.isFinite(raw) && raw >= 500 ? raw : 6000;
 	})();
 	const blinkOff = process.env.PI_BUDDY_BLINK?.trim().toLowerCase() === "off";
+	const animOff = process.env.PI_BUDDY_ANIMATE?.trim().toLowerCase() === "off";
+	const alignRaw = process.env.PI_BUDDY_ALIGN?.trim().toLowerCase();
+	const align: "right" | "left" = alignRaw === "left" ? "left" : "right";
 
 	const persist = () => {
 		state.lastSeenAt = Date.now();
@@ -555,12 +515,13 @@ export default function buddyExtension(pi: ExtensionAPI) {
 		lastCtx = ctx;
 		const mood = moodFor(state.stats);
 		const sp = speciesOf(state);
-		const creature = renderCreature(sp, mood, blinking);
+		const creature = renderCreature(sp, mood, blinking, frameIdx);
 		const showSpeech = !state.muted && speech && Date.now() < speechExpiresAt ? speech : null;
 		const bubble = showSpeech ? buildBubble(showSpeech) : null;
 		const composed = compose(creature, ACCENTS[mood], bubble);
-		const header = buildHeader(state, mood);
-		ctx.ui.setWidget(STATUS_ID, [header, ...composed], { placement: getPlacement() });
+		const cols = Math.max(40, process.stdout.columns || 120);
+		const aligned = align === "right" ? rightAlign(composed, cols - 1) : composed;
+		ctx.ui.setWidget(STATUS_ID, aligned, { placement: getPlacement() });
 	};
 
 	const say = (key: LineKey, ctx: ExtensionContext, chance = 1) => {
@@ -599,6 +560,23 @@ export default function buddyExtension(pi: ExtensionAPI) {
 		}
 	};
 
+	const scheduleNextFrame = () => {
+		if (animOff) return;
+		const ms = 1500 + Math.floor(Math.random() * 1100);
+		frameTimer = setTimeout(() => {
+			frameIdx = (frameIdx + 1) % 3;
+			if (lastCtx) render(lastCtx);
+			scheduleNextFrame();
+		}, ms);
+	};
+
+	const stopFrameTicker = () => {
+		if (frameTimer) {
+			clearTimeout(frameTimer);
+			frameTimer = null;
+		}
+	};
+
 	pi.on("session_start", async (_event, ctx) => {
 		state.totalSessions += 1;
 		state.stats = nudge(state.stats, { chaos: -3, patience: +2 });
@@ -606,10 +584,12 @@ export default function buddyExtension(pi: ExtensionAPI) {
 		say("session_start", ctx);
 		render(ctx);
 		startBlinking();
+		scheduleNextFrame();
 	});
 
 	pi.on("session_shutdown", async () => {
 		stopBlinking();
+		stopFrameTicker();
 		if (bubbleTimer) clearTimeout(bubbleTimer);
 		persist();
 	});
@@ -657,14 +637,15 @@ export default function buddyExtension(pi: ExtensionAPI) {
 	pi.on("message_end", async (_event, ctx) => render(ctx));
 
 	pi.registerCommand("buddy", {
-		description: "Show your pi-buddy. Subcommands: stats, mute, unmute, rename <name>, adopt, reset",
+		description: "Show your pi-buddy. Subcommands: mute, unmute, rename <name>, adopt",
 		handler: async (args, ctx: ExtensionCommandContext) => {
 			const parts = args.trim().split(/\s+/).filter(Boolean);
 			const sub = (parts[0] ?? "").toLowerCase();
 			const rest = parts.slice(1).join(" ").trim();
 
-			if (!sub || sub === "stats" || sub === "show") {
-				ctx.ui.notify(panel(state, blinking).join("\n"), "info");
+			if (!sub || sub === "show") {
+				ctx.ui.notify(`${nameOf(state)} the ${speciesOf(state).name} is here.`, "info");
+				render(ctx);
 				return;
 			}
 			if (sub === "mute") {
@@ -700,7 +681,7 @@ export default function buddyExtension(pi: ExtensionAPI) {
 			if (sub === "adopt") {
 				const ok = await ctx.ui.confirm(
 					"Adopt a new buddy?",
-					"This re-rolls your species and resets stats. Your current buddy will be gone.",
+					"This re-rolls your species. Your current buddy will be gone.",
 				);
 				if (!ok) return;
 				const next = freshState();
@@ -710,19 +691,7 @@ export default function buddyExtension(pi: ExtensionAPI) {
 				render(ctx);
 				return;
 			}
-			if (sub === "reset") {
-				const ok = await ctx.ui.confirm(
-					"Reset stats?",
-					"Stats go back to baseline (with species bias). Species and name are kept.",
-				);
-				if (!ok) return;
-				state.stats = applyBias(DEFAULT_STATS, speciesOf(state).bias);
-				persist();
-				ctx.ui.notify("Stats reset.", "info");
-				render(ctx);
-				return;
-			}
-			ctx.ui.notify(`Unknown subcommand: ${sub}. Try: stats | mute | unmute | rename | adopt | reset`, "warning");
+			ctx.ui.notify(`Unknown subcommand: ${sub}. Try: mute | unmute | rename | adopt`, "warning");
 		},
 	});
 }

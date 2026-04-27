@@ -4,16 +4,17 @@ A [pi](https://github.com/mariozechner/pi-coding-agent) extension that gives you
 
 ## Display
 
+The buddy parks on the right side of the editor and animates idly (3-frame cycle every ~2s, plus an idle blink). Speech bubbles pop up to its left when it has something to say.
+
 ```
-cat (grumpy)
-   /\___/\
-  ( ¬ ¬ )    ╭────────────────────╮
-   > ‾ <     │ of course it broke │
-  /(  |  )\  ╰────────────────────╯
-     ¯  ¯
+                                                  /\___/\
+                          ╭────────────────────╮ ( ¬ ¬ )
+                          │ of course it broke │  > ‾ <
+                          ╰────────────────────╯ /(  |  )\
+                                                    ¯  ¯
 ```
 
-The buddy renders as a 6-row widget (1 header + 5-row creature) below the editor. The creature gets a mood-tinted accent color, mood-driven eyes/mouth, and an idle blink ticker. Speech bubbles appear as a bordered box beside the creature for ~6s after agent events. State is persisted to `~/.pi/pi-buddy/state.json`.
+Each species has 3 idle frames (subtle tail wags, ear flicks, particles) so the creature feels alive. State is persisted to `~/.pi/pi-buddy/state.json`.
 
 ## Species
 
@@ -70,8 +71,10 @@ Then `/reload` inside pi.
 Environment variables (all optional):
 
 - `PI_BUDDY_PLACEMENT` — `belowEditor` (default) or `aboveEditor`
+- `PI_BUDDY_ALIGN` — `right` (default) or `left`
 - `PI_BUDDY_BUBBLE_MS` — how long a speech bubble stays on screen, in ms (default `6000`, min `500`)
 - `PI_BUDDY_BLINK` — set to `off` to disable the idle blink ticker
+- `PI_BUDDY_ANIMATE` — set to `off` to freeze the creature on frame 0
 - `PI_BUDDY_SEED` — override the species hash seed (default `os.userInfo().username`). Set this to share buddies across users or pin a species in CI.
 
 ## Notes
